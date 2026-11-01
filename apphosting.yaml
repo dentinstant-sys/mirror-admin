@@ -1,0 +1,41 @@
+# apphosting.yaml
+runConfig:
+  minInstances: 0
+  maxInstances: 10
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 1024
+
+build:
+  installCommand: npm install
+  buildCommand: npm run build
+
+env:
+  - variable: BOLD_API_KEY
+    value: VEW5VyjrdTMVhZaWlPPCvEQChyhShW9SVzWfCrtPz8g
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: BOLD_INTEGRITY_SECRET
+    secret: BOLD_INTEGRITY_SECRET
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_SITE_URL
+    value: https://mirror-maison--maison-mirror-1ab5b.us-east4.hosted.app
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Credenciales de Firebase Admin SDK
+  - variable: FIREBASE_CLIENT_EMAIL
+    value: "firebase-adminsdk-fbsvc@maison-mirror-1ab5b.iam.gserviceaccount.com" # Cambia por tu client_email real de tu JSON de service account
+    availability:
+      - RUNTIME
+
+  - variable: FIREBASE_PRIVATE_KEY
+    secret: -----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC+xfr+u5djUlo7\n9QnhBh39WjbIYN2gW7KYs0oqtrL/5KuLxqicpM16RRotnipFdflgb26cHdC7JxQN\n+pxSCktcvBit/ptOAmF4vD44/dHdT0hibzdO1aaDUC28kIXGyUN40WKstmHZ/2BK\nvlQrNC6lxdKS+ZSioPNOMZebk7X5Xfyu2L1ZdITnKMiyPD1g/NVc237NSPSfvLPZ\n/bQub+B2xelr/xtWDXgkj1nW4P2V8FnEtoyDWs+m5Un+TrbvpQnCuarnaUzBaoER\nXLwmAW0xWSiZ9ZkLp2rS55t0471P5ga1YAkJeMHAgOc7/EbGXjjs4Ti1CWbkGHTQ\nXITJWNRrAgMBAAECggEAGaQRgrhi9hoE/8cFD2YblMhR0afXUezROd3rK4eH0oYB\nGpXWZsttxK/R/2yhQNnE7VW816XYPrdXZjOXXB1/GJU9efFdHWSLhkdC07UlxmmY\nEIbjN6jWqxKVOyFvoZK+i1gVO6J9z2eYISOou2/Vjzlh/pgmBp+8Y/edaW82h7AD\nUDyeE+ZkUMGkXXn2mZDpO6GC8SixpJhvm4UMKknXGnYKGFE9MM14Rc/pa3No5P5r\nDN4pnKCBURHhjRGIsCOEtJ1VLojA1T1m8iHZnzZN+m7jC9Rn+fmAvP8tcbdSPCre\niwLe3Oi66qxyVJaWy5rB88OD3RR1y5mLOuX8FfPndQKBgQDiiJgV0X8TKe/FZud0\nMEs8q2E523o3vWM22RNuVSc7SPaINI+55iEZUl144jzErfZb5ag3WNcDlHooRMCn\njmv1/mvkwWLp7+qwyZdjJfcZ4QUoF5GY/LnUv8xD0wun2MYa+TQP7g9Z2575rdpb\nC9+PmpQN7T/Bc/z+uQ3aoBB4PQKBgQDXlpjSaa0Zwvp3Uv6GclE63NjHkAHWB5df\nKEa3YzOIwuI9alB8kO8dWU13l6F+sFdXGbaQQca3SjLn+nqUnQOE2LC1t6Vr9XUr\n08l7UlHBoSBx8yfjrpIiQl2MlnkJBtoXXKFVHKTqxE6buk9zfWrtFLQlx2LL5p2c\nEDWvhnGhxwKBgBNZk5QZhv8+D8sO1SppjaOrB+0HQFNOjBD9TdmY0HcR7m0IAFbi\nv2UIUg+nU4WBTo/e+BVyMzuNDTovVT16vuIOT20Ez8wnwCZFsfa4IXlGbUhVawxk\nWgNANtR8THyT2agoLThHH2yPg+7T2Nj6FKiRjZ/66f0+SRgA+pv4HDAJAoGAIKwG\nBP1W6myOIL9HK4DvpogJolTEsnb8DcPA09II4VUHjF8sS3R7iGscPl+Qbe6zjdOr\nwzj0sJpiFJ31LciN2/gq758hRrcwRrAV/MaA9WNB04MSLIMsSlzcaI31UdTkAF5d\nZNSueZW+hAM8Pzhml/9nPcJ1yojsodYjDLLHTckCgYEAywubcncPgAD8a5Rw1eN6\nllEkuvad86wuCf9zhSjZE4Osbf1i6M89hTu0jnVGfAiiE5eAqzs1p05dD1seM6xd\nGakxOPLcDTjPKcj6XeoGIfHDgPbjyJBRyfqEmToVJs4eQVR8PuU/9vaTwjQ0kRce\n9rsTmDUmByDiut5IMVJBEBE=\n-----END PRIVATE KEY-----\n  # Nombre del secreto que creaste en Google Cloud Secret Manager
+    availability:
+      - RUNTIME
