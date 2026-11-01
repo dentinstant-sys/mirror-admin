@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { usePushNotifications } from '../lib/usePushNotifications';
 import { getMessaging, getToken } from 'firebase/messaging';
 import { doc, setDoc } from 'firebase/firestore';
-import { db, app } from '../lib/firebase';
+import { app, db,  } from '../lib/firebase';
 
 interface MenuItem {
   label: string;
