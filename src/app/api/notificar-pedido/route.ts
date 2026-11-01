@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import * as admin from 'firebase-admin';
 
+//preuba
 function initAdmin() {
   if (!admin.apps.length) {
     if (!process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PRIVATE_KEY) {
