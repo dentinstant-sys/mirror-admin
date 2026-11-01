@@ -1,4 +1,3 @@
-// app/admin/AdminSidebar.tsx
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { usePushNotifications } from '../lib/usePushNotifications';
 import { getMessaging, getToken } from 'firebase/messaging';
 import { doc, setDoc } from 'firebase/firestore';
-import { app, db,  } from '../lib/firebase';
+import { app, db } from '../lib/firebase';
 
 interface MenuItem {
   label: string;
@@ -33,21 +32,28 @@ export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifStatus, setNotifStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
+  // Ejecuta la escucha automática
   usePushNotifications();
 
-  // Función manual para forzar la petición de permisos al hacer clic en un botón
+  // Función manual para solicitar/actualizar el token FCM
   const handleEnableNotifications = async () => {
     try {
       setNotifStatus('loading');
       if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
         alert('Tu navegador no soporta notificaciones push.');
+        setNotifStatus('error');
         return;
       }
 
       const permission = await Notification.requestPermission();
 
       if (permission === 'granted') {
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        // Registrar o reusar el Service Worker existente
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+          scope: '/'
+        });
+        
+        await navigator.serviceWorker.ready;
         const messaging = getMessaging(app);
 
         const tokenActual = await getToken(messaging, {
@@ -63,6 +69,9 @@ export default function AdminSidebar() {
           });
           setNotifStatus('success');
           alert('¡Notificaciones activadas con éxito en este dispositivo!');
+        } else {
+          setNotifStatus('error');
+          alert('No se pudo obtener el token de notificación.');
         }
       } else {
         setNotifStatus('error');
@@ -76,7 +85,7 @@ export default function AdminSidebar() {
 
   return (
     <>
-      {/* Botón de Hamburguesa para Móviles y Tablets */}
+      {/* Botón de Hamburguesa para Móviles */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-[#26211E] text-white md:hidden shadow-lg border border-[#3D3530] focus:outline-none"
@@ -85,7 +94,7 @@ export default function AdminSidebar() {
         <span className="text-xl">{isOpen ? '✕' : '☰'}</span>
       </button>
 
-      {/* Overlay oscuro en móviles al abrir el menú */}
+      {/* Overlay oscuro en móviles */}
       {isOpen && (
         <div 
           onClick={() => setIsOpen(false)}
@@ -93,14 +102,15 @@ export default function AdminSidebar() {
         />
       )}
 
-      {/* Barra lateral / Sidebar */}
+      {/* Sidebar con flex layout que fija la sección inferior */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-40 w-64 bg-[#26211E] text-[#FAF9F6] p-6 flex flex-col justify-between flex-shrink-0 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        className={`fixed md:sticky top-0 inset-y-0 left-0 z-40 h-screen w-64 bg-[#26211E] text-[#FAF9F6] p-6 flex flex-col justify-between flex-shrink-0 transform transition-transform duration-300 ease-in-out md:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="space-y-8 overflow-y-auto">
-          {/* LOGO / CABECERA DEL SIDEBAR */}
+        {/* Contenido superior scrolleable si la pantalla es corta */}
+        <div className="flex-1 overflow-y-auto space-y-6 pr-1">
+          {/* LOGO */}
           <div className="flex items-center gap-3 border-b border-[#3D3530] pb-6">
             <span className="text-2xl">🪞</span>
             <div>
@@ -114,7 +124,7 @@ export default function AdminSidebar() {
           </div>
 
           {/* NAVEGACIÓN */}
-          <nav className="space-y-2 text-xs uppercase tracking-widest font-medium">
+          <nav className="space-y-1 text-xs uppercase tracking-widest font-medium">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
 
@@ -122,7 +132,7 @@ export default function AdminSidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setIsOpen(false)} // Cierra el menú al navegar en móvil
+                  onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     isActive
                       ? 'bg-[#423832] text-white font-semibold'
@@ -137,16 +147,24 @@ export default function AdminSidebar() {
           </nav>
         </div>
 
-        {/* Sección inferior: Botón para activar notificaciones de forma manual */}
-        <div className="pt-6 border-t border-[#3D3530] mt-auto">
+        {/* SECCIÓN INFERIOR FIJA: Botón de Notificaciones */}
+        <div className="pt-4 border-t border-[#3D3530] shrink-0">
           <button
             onClick={handleEnableNotifications}
-            disabled={notifStatus === 'loading' || notifStatus === 'success'}
-            className="w-full py-2.5 px-3 rounded-xl bg-[#423832] hover:bg-[#52453e] text-white text-[11px] uppercase tracking-wider font-medium transition-colors flex items-center justify-center gap-2 border border-[#52453e]"
+            disabled={notifStatus === 'loading'}
+            className={`w-full py-2.5 px-3 rounded-xl text-white text-[11px] uppercase tracking-wider font-medium transition-colors flex items-center justify-center gap-2 border ${
+              notifStatus === 'success' 
+                ? 'bg-emerald-900/40 border-emerald-600 text-emerald-200' 
+                : 'bg-[#423832] hover:bg-[#52453e] border-[#52453e]'
+            }`}
           >
             <span>🔔</span>
             <span>
-              {notifStatus === 'success' ? 'Notificaciones Activas' : 'Activar Alertas de Pedidos'}
+              {notifStatus === 'loading'
+                ? 'Activando...'
+                : notifStatus === 'success'
+                ? 'Alertas Activas'
+                : 'Activar Alertas'}
             </span>
           </button>
         </div>
