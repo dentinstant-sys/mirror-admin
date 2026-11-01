@@ -48,7 +48,14 @@ export default function DashboardAdminPage() {
     cargarOrdenes();
   }, []);
 
-  const pedidosNuevos = ordenes.filter((o) => o.estado === 'nuevo' || o.estado === 'Pendiente').length;
+  // INCLUYE BOLD Y WHATSAPP EN "PEDIDOS NUEVOS"
+  const pedidosNuevos = ordenes.filter(
+    (o) => 
+      o.estado === 'nuevo' || 
+      o.estado === 'Pendiente' || 
+      o.estado === 'Pendiente WhatsApp'
+  ).length;
+
   const paraRevision = ordenes.filter((o) => o.estado === 'revision').length;
   const avisosWhatsApp = ordenes.filter((o) => !o.notificacionWhatsAppEnviada).length;
   const saldosPorRecaudar = ordenes

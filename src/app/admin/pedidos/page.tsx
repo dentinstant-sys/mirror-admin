@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, getDocs, doc, updateDoc, orderBy } from 'firebase/firestore';
 import Image from 'next/image';
 import { db } from '@/app/lib/firebase';
 import AdminSidebar from '@/app/components/AdminSidebar';
@@ -28,7 +28,7 @@ interface Orden {
   };
   items: ItemCarrito[];
   total: number;
-  estado: string; // 'nuevo' | 'revision' | 'con_saldo' | 'aviso_enviar' | 'confirmado' | 'en_fabricacion' | 'listo' | 'despachado' | 'entregado' | 'anulado' | 'sin_pagar' | 'Pendiente'
+  estado: string; // 'nuevo' | 'revision' | 'con_saldo' | 'aviso_enviar' | 'confirmado' | 'en_fabricacion' | 'listo' | 'despachado' | 'entregado' | 'anulado' | 'sin_pagar' | 'Pendiente' | 'Pendiente WhatsApp'
   metodoPago?: string;
   fechaTexto?: string;
   fechaCreacion?: any;
@@ -62,13 +62,21 @@ export default function AdminPedidosPage() {
     async function cargarPedidos() {
       try {
         setCargando(true);
-        // Apuntamos a la colección 'pedidos' que creamos en el carrito
-        const q = query(collection(db, 'pedidos'));
+        // Consulta a Firestore ordenada por fechaCreacion descendente (más recientes primero)
+        const q = query(collection(db, 'pedidos'), orderBy('fechaCreacion', 'desc'));
         const querySnap = await getDocs(q);
         const lista: Orden[] = [];
         querySnap.forEach((docSnap) => {
           lista.push({ id: docSnap.id, ...docSnap.data() } as Orden);
         });
+
+        // Ordenamiento secundario de respaldo en JS para registros antiguos sin timestamp
+        lista.sort((a, b) => {
+          const fechaA = a.fechaCreacion?.seconds ? a.fechaCreacion.seconds * 1000 : 0;
+          const fechaB = b.fechaCreacion?.seconds ? b.fechaCreacion.seconds * 1000 : 0;
+          return fechaB - fechaA;
+        });
+
         setOrdenes(lista);
       } catch (error) {
         console.error('Error al cargar los pedidos:', error);
@@ -122,7 +130,6 @@ export default function AdminPedidosPage() {
   // Función para abrir WhatsApp al cliente con mensaje preconfigurado
   const hablarPorWhatsApp = (ord: Orden) => {
     const celular = ord.cliente?.celular || '';
-    // Limpiar caracteres no numéricos para el enlace de WhatsApp
     const celularLimpio = celular.replace(/\D/g, '');
     
     if (!celularLimpio) {
