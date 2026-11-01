@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, getDocs } from 'firebase/firestore';
 import Link from 'next/link';
 import { db } from '@/app/lib/firebase';
+import AdminSidebar from '@/app/components/AdminSidebar';
 
 interface Reclamo {
   id: string;
@@ -59,48 +60,7 @@ export default function AdminReclamosPage() {
     <div className="min-h-screen bg-[#F7F3EC] flex font-sans text-[#111111]">
       
       {/* SIDEBAR NAVEGACIÓN LATERAL */}
-      <aside className="w-64 bg-[#26211E] text-[#FAF9F6] p-6 flex flex-col justify-between flex-shrink-0">
-        <div className="space-y-8">
-          <div className="flex items-center gap-3 border-b border-[#3D3530] pb-6">
-            <span className="text-2xl">🪞</span>
-            <div>
-              <h1 className="font-serif text-base tracking-widest uppercase font-semibold">
-                MAISON MIROIR
-              </h1>
-              <span className="text-[10px] uppercase text-[#A89F91] tracking-wider block">
-                Panel del Taller
-              </span>
-            </div>
-          </div>
-
-          <nav className="space-y-2 text-xs uppercase tracking-widest font-medium">
-            <Link href="/admin" className="flex items-center gap-3 text-[#A89F91] hover:text-white px-4 py-3 rounded-xl transition-all">
-              <span>🏠</span> Inicio
-            </Link>
-            <Link href="/admin/pedidos" className="flex items-center gap-3 text-[#A89F91] hover:text-white px-4 py-3 rounded-xl transition-all">
-              <span>🛍️</span> Pedidos
-            </Link>
-            <Link href="/admin/productos" className="flex items-center gap-3 text-[#A89F91] hover:text-white px-4 py-3 rounded-xl transition-all">
-              <span>🪞</span> Productos
-            </Link>
-            <Link href="/admin/contenido" className="flex items-center gap-3 text-[#A89F91] hover:text-white px-4 py-3 rounded-xl transition-all">
-              <span>📄</span> Contenido del sitio
-            </Link>
-            <Link href="/admin/resenas" className="flex items-center gap-3 text-[#A89F91] hover:text-white px-4 py-3 rounded-xl transition-all">
-              <span>⭐</span> Reseñas
-            </Link>
-            {/* <Link href="/admin/solicitudes" className="flex items-center gap-3 text-[#A89F91] hover:text-white px-4 py-3 rounded-xl transition-all">
-              <span>💬</span> Solicitudes
-            </Link> */}
-            <Link href="/admin/reclamos" className="flex items-center gap-3 bg-[#423832] text-white px-4 py-3 rounded-xl transition-all">
-              <span>⚠️</span> Quejas y reclamos
-            </Link>
-            <Link href="/admin/pagos" className="flex items-center gap-3 text-[#A89F91] hover:text-white px-4 py-3 rounded-xl transition-all">
-              <span>💳</span> Pagos
-            </Link>
-          </nav>
-        </div>
-      </aside>
+ <AdminSidebar />
 
       {/* CONTENIDO PRINCIPAL */}
       <main className="flex-1 p-8 md:p-12 space-y-6 overflow-y-auto">

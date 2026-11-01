@@ -39,7 +39,7 @@ export default function AdminDashboard() {
 
         <header className="mb-12 text-center">
           <span className="text-xs tracking-[0.4em] uppercase text-[#8C8275] block mb-2 font-sans">
-            MAISON MIROIR
+            DECOESPEJOS
           </span>
           <h1 className="font-serif text-4xl text-[#111111]">Administración de Colección</h1>
         </header>

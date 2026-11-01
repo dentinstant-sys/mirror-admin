@@ -2,7 +2,7 @@ import { AuthProvider } from './context/AuthContext';
 import './globals.css';
 
 export const metadata = {
-  title: 'Admin - Maison Mirror',
+  title: 'Admin - Decoespejos',
   description: 'Panel de administración del catálogo y proyectos',
 };
 
