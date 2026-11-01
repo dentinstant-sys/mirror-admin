@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { usePushNotifications } from '../lib/usePushNotifications';
 
 interface MenuItem {
   label: string;
@@ -22,7 +23,7 @@ const menuItems: MenuItem[] = [
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-
+usePushNotifications();
   return (
     <aside className="w-64 bg-[#26211E] text-[#FAF9F6] p-6 flex flex-col justify-between flex-shrink-0">
       <div className="space-y-8">
