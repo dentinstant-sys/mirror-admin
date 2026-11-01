@@ -33,7 +33,6 @@ export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifStatus, setNotifStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  // Hook automático opcional
   usePushNotifications();
 
   // Función manual para forzar la petición de permisos al hacer clic en un botón
@@ -46,6 +45,7 @@ export default function AdminSidebar() {
       }
 
       const permission = await Notification.requestPermission();
+
       if (permission === 'granted') {
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
         const messaging = getMessaging(app);
