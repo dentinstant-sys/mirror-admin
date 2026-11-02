@@ -32,6 +32,55 @@ const subcategoriasPorCategoria: Record<string, string[]> = {
   ]
 };
 
+// 🛠️ Función auxiliar para convertir cualquier imagen (File) a WebP
+const convertirAWebP = (file: File, calidad: number = 0.85): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    if (file.type === 'image/webp') {
+      resolve(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('No se pudo obtener el contexto del canvas'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error('Falló la conversión a WebP'));
+              return;
+            }
+            const nombreSinExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+            const nuevoArchivo = new File([blob], `${nombreSinExt}.webp`, {
+              type: 'image/webp',
+              lastModified: Date.now(),
+            });
+            resolve(nuevoArchivo);
+          },
+          'image/webp',
+          calidad
+        );
+      };
+      img.onerror = (error) => reject(error);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 export default function NuevoProductoPage() {
   const router = useRouter();
   
@@ -93,20 +142,39 @@ export default function NuevoProductoPage() {
     setSubcategoria(subs[0] || '');
   }, [categorias]);
 
-  const handlePrincipalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePrincipalChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImagenPrincipalFile(file);
-      setPreviewPrincipal(URL.createObjectURL(file));
+      try {
+        setMensajeEstado('Optimizando foto principal a WebP...');
+        const archivoWebp = await convertirAWebP(file);
+        setImagenPrincipalFile(archivoWebp);
+        setPreviewPrincipal(URL.createObjectURL(archivoWebp));
+      } catch (error) {
+        console.error('Error al convertir foto principal:', error);
+        setImagenPrincipalFile(file);
+        setPreviewPrincipal(URL.createObjectURL(file));
+      } finally {
+        setMensajeEstado('');
+      }
     }
   };
 
-  const handleAmbientesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAmbientesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setImagenesAmbientesFiles((prev) => [...prev, ...newFiles]);
-      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
-      setPreviewsAmbientes((prev) => [...prev, ...newPreviews]);
+      const filesArray = Array.from(e.target.files);
+      try {
+        setMensajeEstado('Optimizando fotos de galería a WebP...');
+        const convertidos = await Promise.all(filesArray.map((file) => convertirAWebP(file)));
+
+        setImagenesAmbientesFiles((prev) => [...prev, ...convertidos]);
+        const newPreviews = convertidos.map((file) => URL.createObjectURL(file));
+        setPreviewsAmbientes((prev) => [...prev, ...newPreviews]);
+      } catch (error) {
+        console.error('Error al convertir fotos de ambiente:', error);
+      } finally {
+        setMensajeEstado('');
+      }
     }
   };
 
@@ -130,7 +198,7 @@ export default function NuevoProductoPage() {
 
     try {
       setCargando(true);
-      setMensajeEstado('Subiendo foto principal...');
+      setMensajeEstado('Subiendo foto principal en WebP...');
 
       const mainStorageRef = ref(storage, `espejos/principal_${Date.now()}_${imagenPrincipalFile.name}`);
       await uploadBytes(mainStorageRef, imagenPrincipalFile);
@@ -138,7 +206,7 @@ export default function NuevoProductoPage() {
 
       const urlsAmbientes: string[] = [];
       if (imagenesAmbientesFiles.length > 0) {
-        setMensajeEstado(`Subiendo ${imagenesAmbientesFiles.length} fotos de galería...`);
+        setMensajeEstado(`Subiendo ${imagenesAmbientesFiles.length} fotos de galería en WebP...`);
         for (let i = 0; i < imagenesAmbientesFiles.length; i++) {
           const file = imagenesAmbientesFiles[i];
           const ambStorageRef = ref(storage, `espejos/ambientes_${Date.now()}_${file.name}`);

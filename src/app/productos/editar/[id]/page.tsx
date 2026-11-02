@@ -32,6 +32,57 @@ const subcategoriasPorCategoria: Record<string, string[]> = {
   ]
 };
 
+// 🛠️ Función auxiliar para convertir cualquier imagen (File) a WebP
+const convertirAWebP = (file: File, calidad: number = 0.85): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    // Si ya es webp, la devolvemos directamente
+    if (file.type === 'image/webp') {
+      resolve(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('No se pudo obtener el contexto del canvas'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error('Falló la conversión a WebP'));
+              return;
+            }
+            // Cambiar la extensión del nombre original a .webp
+            const nombreSinExt = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+            const nuevoArchivo = new File([blob], `${nombreSinExt}.webp`, {
+              type: 'image/webp',
+              lastModified: Date.now(),
+            });
+            resolve(nuevoArchivo);
+          },
+          'image/webp',
+          calidad
+        );
+      };
+      img.onerror = (error) => reject(error);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 export default function EditarProductoPage({
   params,
 }: {
@@ -102,7 +153,6 @@ export default function EditarProductoPage({
           const data = docSnap.data();
           setNombre(data.nombre || '');
           
-          // Soporte tanto para array nuevo como para string antiguo
           if (data.categorias && Array.isArray(data.categorias)) {
             setCategorias(data.categorias);
           } else if (data.categoria) {
@@ -153,20 +203,39 @@ export default function EditarProductoPage({
     }
   }, [id, router]);
 
-  const handlePrincipalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePrincipalChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImagenPrincipalFile(file);
-      setPreviewPrincipal(URL.createObjectURL(file));
+      try {
+        setMensajeEstado('Optimizando foto principal a WebP...');
+        const archivoWebp = await convertirAWebP(file);
+        setImagenPrincipalFile(archivoWebp);
+        setPreviewPrincipal(URL.createObjectURL(archivoWebp));
+      } catch (error) {
+        console.error('Error al convertir imagen principal:', error);
+        setImagenPrincipalFile(file);
+        setPreviewPrincipal(URL.createObjectURL(file));
+      } finally {
+        setMensajeEstado('');
+      }
     }
   };
 
-  const handleAmbientesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAmbientesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setNuevasAmbientesFiles((prev) => [...prev, ...newFiles]);
-      const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
-      setPreviewsNuevasAmbientes((prev) => [...prev, ...newPreviews]);
+      const filesArray = Array.from(e.target.files);
+      try {
+        setMensajeEstado('Optimizando nuevas fotos a WebP...');
+        const convertidos = await Promise.all(filesArray.map((file) => convertirAWebP(file)));
+        
+        setNuevasAmbientesFiles((prev) => [...prev, ...convertidos]);
+        const newPreviews = convertidos.map((file) => URL.createObjectURL(file));
+        setPreviewsNuevasAmbientes((prev) => [...prev, ...newPreviews]);
+      } catch (error) {
+        console.error('Error al convertir fotos de ambiente:', error);
+      } finally {
+        setMensajeEstado('');
+      }
     }
   };
 
@@ -182,19 +251,12 @@ export default function EditarProductoPage({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!subcategoria) {
-      alert('Por favor selecciona una subcategoría.');
-      return;
-    }
-
     try {
       setCargando(true);
-      setMensajeEstado('Actualizando información...');
-
       let urlPrincipal = imagenPrincipalActual;
 
       if (imagenPrincipalFile) {
-        setMensajeEstado('Subiendo nueva foto principal...');
+        setMensajeEstado('Subiendo foto principal en WebP...');
         const mainStorageRef = ref(storage, `espejos/principal_${Date.now()}_${imagenPrincipalFile.name}`);
         await uploadBytes(mainStorageRef, imagenPrincipalFile);
         urlPrincipal = await getDownloadURL(mainStorageRef);
@@ -202,7 +264,7 @@ export default function EditarProductoPage({
 
       const urlsNuevasAmbientes: string[] = [];
       if (nuevasAmbientesFiles.length > 0) {
-        setMensajeEstado(`Subiendo ${nuevasAmbientesFiles.length} nuevas fotos de galería...`);
+        setMensajeEstado(`Subiendo ${nuevasAmbientesFiles.length} fotos de galería en WebP...`);
         for (let i = 0; i < nuevasAmbientesFiles.length; i++) {
           const file = nuevasAmbientesFiles[i];
           const ambStorageRef = ref(storage, `espejos/ambientes_${Date.now()}_${file.name}`);
@@ -241,7 +303,7 @@ export default function EditarProductoPage({
       const docRef = doc(db, 'productos', id);
       await updateDoc(docRef, {
         nombre: nombre.trim(),
-        categorias: categorias, // Guardar array actualizado
+        categorias: categorias,
         categoria: categorias[0] || 'organicos',
         subcategoria: subcategoria.trim(),
         precio: Number(precio),
@@ -398,7 +460,7 @@ export default function EditarProductoPage({
                     className="hidden"
                   />
                 </label>
-                <span className="text-xs text-[#8C8275]">Sube una nueva foto solo si deseas reemplazar la portada actual.</span>
+                <span className="text-xs text-[#8C8275]">Sube una nueva foto solo si deseas reemplazar la portada actual. Se convertirá automáticamente a WebP.</span>
               </div>
             </div>
 
@@ -544,7 +606,7 @@ export default function EditarProductoPage({
 
           </div>
 
-          {/* 4. INFORMACIÓN EDITORIAL (ZARA HOME STYLE) */}
+          {/* 4. INFORMACIÓN EDITORIAL */}
           <div className="space-y-6 pt-4 border-t border-[#EAE7E1]">
             <h2 className="font-serif text-lg text-[#111111] border-b border-[#EAE7E1] pb-2">
               4. Composición, Cuidados, Origen & Envíos
