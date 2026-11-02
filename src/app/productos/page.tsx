@@ -91,7 +91,7 @@ export default function ListadoProductosPage() {
               href="/productos/nuevo"
               className="bg-[#1A1A1A] text-white px-5 py-3 rounded-xl text-xs uppercase tracking-widest hover:bg-[#8C6D53] transition-colors font-medium shadow-sm"
             >
-              + Agregar Nuevo Mueble
+              + Agregar Nuevo 
             </Link>
             <Link 
               href="/" 
